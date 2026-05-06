@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { UUID } from 'crypto';
 
 // Nossa tipagem base para o TypeScript parar de reclamar
 export type UserRole = 'trainer' | 'student';
@@ -16,7 +17,8 @@ export async function handleSignUp(
   email: string, 
   password: string, 
   name: string, 
-  role: UserRole
+  role: UserRole,
+  coach_id?: string
 ): Promise<void> {
   
   // 1. Cria a autenticação segura
@@ -38,7 +40,8 @@ export async function handleSignUp(
         { 
           id: authData.user.id, 
           name: name, 
-          role: role 
+          role: role,
+          coach_id: coach_id || null
         }
       ]);
 

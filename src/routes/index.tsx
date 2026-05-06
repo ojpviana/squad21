@@ -55,7 +55,10 @@ function LoginPage() {
         const realRole = await handleLogin(email, password);
         navigate({ to: realRole === 'trainer' ? '/coach' : '/student' });
       } else {
-        await handleSignUp(email, password, name, selectedRole);
+        // Resgata o ID que salvamos na memória
+        const inviteId = localStorage.getItem('squad21_invite_id'); 
+        // Envia o inviteId como o 5º parâmetro da função
+        await handleSignUp(email, password, name, selectedRole, inviteId || undefined);
         navigate({ to: selectedRole === 'trainer' ? '/coach' : '/student' });
       }
     } catch (error: any) {
