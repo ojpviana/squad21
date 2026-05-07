@@ -24,7 +24,7 @@ export async function handleSignUp(
   // 1. Cria a autenticação segura
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
-    password,
+    password, 
   });
 
   if (authError) {
