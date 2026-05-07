@@ -34,6 +34,7 @@ interface Challenge {
 function CoachDashboard() {
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [studentsCount, setStudentsCount] = useState(0); // <-- ESTADO DOS ALUNOS ADICIONADO AQUI
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   
@@ -43,28 +44,41 @@ function CoachDashboard() {
   const [tasks, setTasks] = useState<string[]>([""]);
 
   useEffect(() => {
-    async function loadChallenges() {
+    async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate({ to: "/", search: { invite: undefined } });
         return;
       }
 
-      const { data, error } = await supabase
+      // 1. CARREGA OS DESAFIOS DO TREINADOR
+      const { data: challengesData, error: challengesError } = await supabase
         .from('challenges')
         .select('*')
         .eq('trainer_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
+      if (challengesError) {
         toast.error("Erro ao carregar desafios.");
-        console.error(error);
+        console.error(challengesError);
       } else {
-        setChallenges(data || []);
+        setChallenges(challengesData || []);
       }
+
+      // 2. CONTA OS ALUNOS VINCULADOS A ESTE TREINADOR (O MOTOR REAL)
+      // *Atenção:* Se sua tabela não se chamar 'profiles', ajuste o nome aqui embaixo.
+      const { count, error: countError } = await supabase
+        .from('profiles') 
+        .select('*', { count: 'exact', head: true }) 
+        .eq('coach_id', user.id);
+
+      if (!countError && count !== null) {
+        setStudentsCount(count);
+      }
+
       setIsLoading(false);
     }
-    loadChallenges();
+    loadData();
   }, [navigate]);
 
   const addTask = () => setTasks([...tasks, ""]);
@@ -118,7 +132,6 @@ function CoachDashboard() {
   };
 
   const calculateCurrentDay = (startDateStr: string) => {
-    // Força o fuso horário para evitar problemas de cálculo
     const start = new Date(startDateStr + 'T00:00:00').getTime();
     const now = new Date().getTime();
     const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
@@ -189,7 +202,8 @@ function CoachDashboard() {
 
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <StatCard icon={Trophy} label="Desafios ativos" value={challenges.length.toString()} accent />
-          <StatCard icon={Users} label="Alunos engajados" value="0" /> 
+          {/* O ADESIVO FOI REMOVIDO DAQUI. AGORA ELE MOSTRA O VALOR REAL DO BANCO */}
+          <StatCard icon={Users} label="Alunos engajados" value={studentsCount.toString()} /> 
           <StatCard icon={Zap} label="Taxa de conclusão" value="-" />
         </div>
 
