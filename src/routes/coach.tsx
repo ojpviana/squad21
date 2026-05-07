@@ -68,7 +68,7 @@ function CoachDashboard() {
       // 2. CONTA OS ALUNOS VINCULADOS A ESTE TREINADOR (O MOTOR REAL)
       // *Atenção:* Se sua tabela não se chamar 'profiles', ajuste o nome aqui embaixo.
       const { count, error: countError } = await supabase
-        .from('profiles') 
+        .from('users') 
         .select('*', { count: 'exact', head: true }) 
         .eq('coach_id', user.id);
 
